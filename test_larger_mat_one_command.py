@@ -49,7 +49,7 @@ def run_cmd(cmd_string, timeout=30*60):
     return code, msg, memory_usage_mb
 
 
-def run_single_trial(exp_mat_name, exp_mat_dir, solver_name, bin_path, save_dir, timeout):
+def run_single_trial(exp_mat_name, exp_mat_dir, solver_name, bin_path, save_dir, timeout, cores = None):
     os.makedirs(save_dir, exist_ok=True)
     pattern = re.compile(r'^\d+_\d+_A\.bin$')
     bin_list = [f for f in os.listdir(exp_mat_dir) if os.path.isfile(os.path.join(exp_mat_dir, f)) and pattern.match(f)]
@@ -58,15 +58,30 @@ def run_single_trial(exp_mat_name, exp_mat_dir, solver_name, bin_path, save_dir,
 
     os.environ['OMP_NUM_THREADS'] = "1"
 
+    count = -1
     for file in bin_list:
+        count += 1
+        if count == 10:
+            print("Skipping further tests for brevity.")
+            break
         A = os.path.join(exp_mat_dir, file)
         b = os.path.join(exp_mat_dir, file.split(".")[0][:-1]+"b.bin")
 
-        cmd_string="%s %s %s %s"%(
-            bin_path,
-            A,
-            b,
-            solver_name)  
+        # Use taskset to limit Pardiso to a single physical core (2 hyperthreads: CPU 0,64)
+        # This creates a fair single-threaded comparison environment
+        if cores is not None:
+            cmd_string="taskset -c %s %s %s %s %s"%(
+                cores,
+                bin_path,
+                A,
+                b,
+                solver_name)
+        else:
+            cmd_string="%s %s %s %s"%(
+                bin_path,
+                A,
+                b,
+                solver_name)  
 
         code,msg,mem=run_cmd(cmd_string, timeout*60)  # timeout=30*60sec
 
@@ -74,28 +89,20 @@ def run_single_trial(exp_mat_name, exp_mat_dir, solver_name, bin_path, save_dir,
             f.write("%s\ncode %d\nmemory_usage_mb %f\n%s\n"%(cmd_string,code,mem,msg))
 
 
-
-solver_list = ["Eigen::PardisoLDLT", "Hypre", "AMGCL"]
-mat_expnames = ["3D_golf_ball_vanilla_try_larger_matrix_0",
-                "3D_golf_ball_39376_try_larger_matrix_0",
-                "3D_golf_ball_73852_try_larger_matrix_0",
-                "3D_golf_ball_113325_try_larger_matrix_1",
-                "3D_golf_ball_189090_try_larger_matrix_2"]
-mat_dirs = ["/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_vanilla_try_larger_matrix_0",
-                "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_39376_try_larger_matrix_0",
-                "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_73852_try_larger_matrix_0",
-                "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_113325_try_larger_matrix_1",
-                "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_189090_try_larger_matrix_2"]
-log_save_dir = "/u/1/chenyang/benchmark_data/larger_matrix_exp/larger_mat_exp_result/trial_2"
-timeout = 30
+if __name__ == "__main__":
+    os.environ['OMP_NUM_THREADS'] = "8"
+    os.environ['MKL_NUM_THREADS'] = "8"
+    cmd_string="taskset -c %s %s %s %s %s"%(
+        "70-77",
+        "~/benchmark/build.test_bug/TestMatLogger",
+        "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_39376_try_larger_matrix_0/62_21_A.bin",
+        "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/3D_golf_ball_39376_try_larger_matrix_0/62_21_b.bin",
+        "Hypre")
 
 
-for i, expname in enumerate(mat_expnames):
-    for solver in solver_list:
-        run_single_trial(exp_mat_name = expname
-                         , exp_mat_dir = mat_dirs[i]
-                         , solver_name = solver
-                         , bin_path = polysolve_bin
-                         , save_dir = log_save_dir
-                         , timeout = timeout)
-        print("Solver: ", solver, "Exp: ", expname)
+    code,msg,mem=run_cmd(cmd_string, 30*60)  # timeout=30*60sec
+
+    print("%s\ncode %d\nmemory_usage_mb %f\n%s\n"%(cmd_string,code,mem,msg))
+
+    # with open("/u/1/chenyang/benchmark_data/larger_matrix_exp/tmp_log.txt", 'a') as f:
+    #     f.write("%s\ncode %d\nmemory_usage_mb %f\n%s\n"%(cmd_string,code,mem,msg))

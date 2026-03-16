@@ -3,9 +3,9 @@
 export MKL_THREADING_LAYER=GNU
 # export MKL_THREADING_LAYER=INTEL
 
-TARGET_FOLDER="3D_golf_ball_113325_try_larger_matrix_1"
+TARGET_FOLDER="3D_golf_ball_vanilla_try_larger_matrix_1"
 BIN_FILE="/u/1/chenyang/LearnPolyFEM/polyfem/build.final_large_matrix/PolyFEM_bin"
-JSON_FILE="/u/1/chenyang/benchmark_data/larger_matrix_exp/contact/examples/3D/golf-ball_113325.json"
+JSON_FILE="/u/1/chenyang/benchmark_data/larger_matrix_exp/contact/examples/3D/golf-ball.json"
 
 # Absolute path to target folder
 target_folder="/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index/${TARGET_FOLDER}"
