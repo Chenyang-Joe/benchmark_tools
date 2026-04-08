@@ -53,8 +53,8 @@ def load_mesh(path):
 
 if __name__ == "__main__":
     raw_tet_path = "/u/1/chenyang/benchmark_data/larger_matrix_exp/contact/meshes/3D/simple/sphere/sphere19K.msh"
-    save_path = Path("/u/1/chenyang/benchmark_data/larger_matrix_exp/larger_mesh/dataset_curation/result_10")
-    ftetwild_bin = "/u/1/chenyang/fTetWild/build.box_scale_10/FloatTetwild_bin"
+    save_path = Path("/u/1/chenyang/benchmark_data/larger_matrix_exp/larger_mesh/dataset_curation/result_8_1")
+    ftetwild_bin = "/u/1/chenyang/fTetWild/build.box_scale_8/FloatTetwild_bin"
     parse = argparse.ArgumentParser(description='Remesh a tet mesh with fTetWild.')
     parse.add_argument('--ideal_edge_length', type=float, default=0.0105, help='Ideal edge length for remeshing.')
     args = parse.parse_args()

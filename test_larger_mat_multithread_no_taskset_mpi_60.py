@@ -56,8 +56,12 @@ def run_cmd(cmd_string, timeout=30*60):
 
 def run_single_trial(exp_mat_name, exp_mat_dir, solver_name, bin_path, save_dir, timeout, cores = None, threads = 8, mini_batch_size = -1):
     os.makedirs(save_dir, exist_ok=True)
-    pattern = re.compile(r'^\d+_\d+_A\.bin$')
+    # pattern = re.compile(r'^\d+_\d+_A\.bin$')
+    # first digit must be 60
+    pattern = re.compile(r'^60_\d+_A\.bin$')
     bin_list = [f for f in os.listdir(exp_mat_dir) if os.path.isfile(os.path.join(exp_mat_dir, f)) and pattern.match(f)]
+    # sort by the numeric part of the filename (assuming format like "10000_10000_A.bin")
+    # if the first number is the same, sort by the second number (matrix size)
     bin_list.sort(key=lambda x: (int(x.split("_")[0]), int(x.split("_")[1])))
     log_path = os.path.join(save_dir, solver_name+"_"+exp_mat_name+".log")
     open(log_path, 'w').close() 
@@ -115,16 +119,14 @@ if __name__ == "__main__":
     num_threads = args.threads
     mini_batch_size = args.mini_batch_size
 
-    # solver_list = ["Eigen::PardisoLDLT", "Hypre", "AMGCL", "Trilinos"]
-    solver_list = ["Hypre", "Trilinos"]
+    solver_list = ["Eigen::PardisoLDLT", "Hypre", "AMGCL", "Trilinos"]
     # solver_list = ["Eigen::PardisoLDLT"]
 
     if data_name == "old_data":
         mat_source_dir = "/mnt/hdd1/chenyang/benchmark_data/matrix_resource/solver-mat-0906"
     elif data_name == "golf_ball":
         # mat_source_dir = "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/new_mat_bin_support_large_index"
-        # mat_source_dir = "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/result_10000-250000-every-10000"
-        mat_source_dir = "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/result_250000_plus_3"
+        mat_source_dir = "/mnt/hdd1/chenyang/benchmark_data/larger_matrix_exp/result_10000-250000-every-10000"
     mat_expnames = []
     mat_dirs = []
 
@@ -138,7 +140,7 @@ if __name__ == "__main__":
     
     polysolve_bin = "/u/1/chenyang/benchmark/build.trilinos_tpetra/TestMatLogger"
 
-    log_save_dir = f"/u/1/chenyang/benchmark_data/larger_matrix_exp/larger_mat_exp_result/2026-3-25/only_one/{data_name}_{num_threads}"
+    log_save_dir = f"/u/1/chenyang/benchmark_data/larger_matrix_exp/larger_mat_exp_result/2026-3-18/60_first_3/{data_name}_{num_threads}"
     timeout = 30
 
     for i, expname in enumerate(mat_expnames):
